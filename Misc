@@ -1,0 +1,151 @@
+float r = cos (gl_FragCoord.x * 0.05 + 0.0 + Factor1) * 0.5 + 0.5;
+	float g = cos (gl_FragCoord.x * 0.05 + 2.0 + Factor1) * 0.5 + 0.5;
+	float b = cos (gl_FragCoord.x * 0.05 + 4.0 + Factor1) * 0.5 + 0.5;
+	
+	float r = cos (gl_FragCoord.x * 0.05 + 0.0 - gl_FragCoord.y * 0.05 + Factor2) * 0.5 + 0.5;
+	float g = cos (gl_FragCoord.x * 0.01 + 2.0 + Factor1) * 0.5 + 0.5;
+	float b = cos (gl_FragCoord.x * 0.05 + 4.0 + gl_FragCoord.y * 0.05 - Factor2) * 0.5 + 0.5;
+
+vec3 red = vec3 (1.0, 0.0, 0.0);
+	vec3 blue = vec3 (0.0, 0.0, 1.0);
+
+	if (gl_FragCoord.x > 400.0)
+	{
+		gl_FragColor = vec4(blue, 1.0);
+	}
+	else
+	{
+		gl_FragColor = vec4(red, 1.0);
+	}
+	
+	float circle = length (gl_FragCoord.xy - vec2(400.0, 250.0));
+	if (circle < Factor2)
+	{
+		gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	}
+
+
+vec4 resultColor;
+	resultColor.r = mod(fColor.r + Factor1, 1.0);
+	resultColor.g = mod(fColor.g + Factor1, 1.0);
+	resultColor.b = mod(fColor.b + Factor1, 1.0);
+	resultColor.a = fColor.a;
+	
+	gl_FragColor = resultColor;
+
+
+vec4 texColor = texture2D(sampler2d, fTexCoord);
+	vec4 combinedColor;
+	combinedColor = fColor * texColor;
+	
+	vec4 resultColor;
+	resultColor.r = mod(combinedColor.r + Factor1, 1.0);
+	resultColor.g = mod(combinedColor.g + Factor1, 1.0);
+	resultColor.b = mod(combinedColor.b + Factor1, 1.0);
+	resultColor.a = combinedColor.a;
+	
+	gl_FragColor = resultColor;
+
+
+vec4 texColor = texture2D(sampler2d, fTexCoord);
+	vec4 combinedColor;
+	combinedColor = fColor * texColor;
+	
+	vec4 resultColor;
+	resultColor.r = mod(texColor.r + Factor1, 1.0);
+	resultColor.g = mod(texColor.g + Factor1, 1.0);
+	resultColor.b = mod(texColor.b + Factor1, 1.0);
+	resultColor.a = texColor.a;
+	
+	//gl_FragColor = resultColor;
+	
+	//gl_FragColor = texture2D(sampler2d, fTexCoord);
+	
+	float circle = length (gl_FragCoord.xy - vec2(400.0, 250.0));
+	if (circle < Factor2)
+	{
+		gl_FragColor = resultColor;
+	}
+
+
+precision mediump float;
+varying vec4 fColor;
+varying vec2 fTexCoord;
+
+uniform sampler2D sampler2d;
+uniform float Factor1;
+uniform float Factor2;
+
+float plot(vec2 st, float pct)
+{
+	return smoothstep(pct-0.5, pct, st.y) - smoothstep(pct, pct+0.5, st.y);
+}
+
+void main()
+{
+	vec4 texColor = texture2D(sampler2d, fTexCoord);
+	vec4 combinedColor;
+	combinedColor = fColor * texColor;
+	
+	vec2 center = vec2 (100, 50);
+	vec2 st = gl_FragCoord.xy/center;
+	
+	float y = sin ((st.x * Factor2) + Factor1);
+	
+	vec3 color = vec3(y);
+	
+	float pct = plot(st, y + 6.0);
+	color = pct * vec3(1.0, 1.0, 1.0);
+	
+	gl_FragColor = vec4(color, 1.0) + texture2D(sampler2d, fTexCoord);
+
+	///
+	float amp = 60.0;
+	float windowHalfHeight = 300.0;
+	float lightenedPointY = cos (gl_FragCoord.x * 0.02 + Factor1) * amp + windowHalfHeight;
+	
+	vec2 lightenedPoint = vec2 (gl_FragCoord.x, lightenedPointY);
+	vec2 currentPixelPos = vec2 (gl_FragCoord.x, gl_FragCoord.y);
+	
+	float dist = abs (currentPixelPos.y - lightenedPointY);
+	float thickness = 20.0;
+	
+	// Linear Interpolation
+	float r = mix (1.0, 0.5, dist/thickness);
+	if (r < 0.0)
+		r = 0.0;
+	float g = mix (1.0, 0.0, dist/thickness);
+	if (g < 0.0)
+		g = 0.0;
+	float b = mix (1.0, 0.7, dist/thickness);
+	if (b < 0.0)
+		b = 0.0;
+	
+	// Smoothstep
+	/*float r = smoothstep (30.0, 0.0, dist);
+	float g = smoothstep (30.0, 0.0, dist);
+	float b = smoothstep (30.0, 0.0, dist);*/
+	
+	/*vec4 color;
+	
+	if (dist <= thickness)
+	{
+		color = vec4(1.0, 1.0, 1.0, 1.0);
+	}
+	else
+	{
+		color = vec4(0.0, 0.0, 0.0, 0.0);
+	}
+	
+	gl_FragColor = color * 0.5 + texture2D(sampler2d, fTexCoord);*/
+	gl_FragColor = (vec4(r, g, b, 1.0) + texture2D(sampler2d, fTexCoord));
+}
+
+
+/// Grayscale and Sepia
+	vec4 texture = texture2D(sampler2d, fTexCoord);
+	float average = (texture.r + texture.g + texture.b) / 3.0;
+	vec4 grayscale = vec4(average, average, average, 1.0);
+	  
+	//gl_FragColor = vec4(grayscale);
+	gl_FragColor = vec4(grayscale) * vec4(0.8, 0.6, 0.0, 1.0);
